@@ -1,0 +1,105 @@
+/* Runtime layout variables and element defaults. */
+
+:root {
+  --gutter: 1rem; /* 16px */
+  --header-height: 3.5rem; /* 56px */
+  --section-space: 2.5rem; /* 40px */
+
+  color-scheme: light;
+}
+
+@media (width >= 48rem) {
+  :root {
+    --gutter: 1.5rem; /* 24px */
+    --section-space: 3.5rem; /* 56px */
+  }
+}
+
+@media (width >= 64rem) {
+  :root {
+    --gutter: 2.5rem; /* 40px */
+    --header-height: 4.5rem; /* 72px */
+    --section-space: 5rem; /* 80px */
+  }
+}
+
+@media (width >= 90rem) {
+  :root {
+    --gutter: 4rem; /* 64px */
+  }
+}
+
+@layer base {
+  *,
+  ::before,
+  ::after {
+    border-color: var(--color-border);
+  }
+
+  html {
+    scroll-padding-top: var(--header-height);
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: var(--text-base--line-height);
+    letter-spacing: var(--text-base--letter-spacing);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-weight: 400;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+
+  img,
+  video {
+    background-color: var(--color-bg-muted);
+  }
+
+  ::selection {
+    background-color: var(--color-fg);
+    color: var(--color-fg-inverse);
+  }
+
+  :focus-visible {
+    outline: 1px solid var(--color-fg);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

@@ -1,0 +1,116 @@
+/*
+ * Design tokens. Every value here becomes a Tailwind utility
+ * (e.g. --color-fg-muted → text-fg-muted, --aspect-product → aspect-product).
+ *
+ * Default palettes, type scale, radii and breakpoints are reset so only
+ * the system's own values are available.
+ */
+
+@theme {
+  /* ---------- Breakpoints: mobile-first, 1440 is the content cap ---------- */
+  --breakpoint-*: initial;
+  --breakpoint-sm: 30rem; /*  480px – large phones */
+  --breakpoint-md: 48rem; /*  768px – tablet */
+  --breakpoint-lg: 64rem; /* 1024px – desktop */
+  --breakpoint-xl: 90rem; /* 1440px – wide; content stops growing */
+
+  /* ---------- Color: monochrome; imagery carries the color ---------- */
+  --color-*: initial;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+  --color-black: #000000;
+  --color-white: #ffffff;
+
+  --color-bg: #ffffff;
+  --color-bg-muted: #fbfbfb; /* product image well */
+  --color-bg-subtle: #f4f4f4; /* skeletons, hover fills */
+  --color-bg-inverse: #000000;
+
+  --color-fg: #000000;
+  --color-fg-muted: #555555; /* secondary copy (7.4:1) */
+  --color-fg-subtle: #767676; /* meta, placeholders (4.5:1, AA minimum) */
+  --color-fg-inverse: #ffffff;
+
+  --color-border: #dddddd; /* default hairline */
+  --color-border-subtle: rgb(0 0 0 / 0.15); /* hairline on tinted surfaces */
+  --color-border-strong: #000000; /* outlined controls, selected state */
+
+  --color-overlay: rgb(0 0 0 / 0.4); /* drawers and modals backdrop */
+
+  --color-success: #1f7a5a;
+  --color-error: #b3261e;
+
+  /* ---------- Typography ---------- */
+  --font-sans: var(--font-hanken), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-garamond), ui-serif, Georgia, serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Tracking tightens as size grows; uppercase labels open up slightly. */
+  --tracking-*: initial;
+  --tracking-tightest: -0.04em;
+  --tracking-tighter: -0.03em;
+  --tracking-tight: -0.02em;
+  --tracking-snug: -0.01em;
+  --tracking-normal: 0em;
+  --tracking-wide: 0.02em;
+  --tracking-wider: 0.08em;
+  --tracking-widest: 0.16em; /* wordmark */
+
+  --text-*: initial;
+  --text-2xs: 0.625rem; /* 10px – badges, flags */
+  --text-2xs--line-height: 0.75rem;
+  --text-2xs--letter-spacing: var(--tracking-normal);
+  --text-xs: 0.75rem; /* 12px – UI workhorse: nav, buttons, tile copy */
+  --text-xs--line-height: 1rem;
+  --text-xs--letter-spacing: var(--tracking-snug);
+  --text-sm: 0.875rem; /* 14px – dense body, form text */
+  --text-sm--line-height: 1.25rem;
+  --text-sm--letter-spacing: var(--tracking-snug);
+  --text-base: 1rem; /* 16px – body */
+  --text-base--line-height: 1.5rem;
+  --text-base--letter-spacing: var(--tracking-tight);
+  --text-lg: 1.25rem; /* 20px – subtitles */
+  --text-lg--line-height: 1.5rem;
+  --text-lg--letter-spacing: var(--tracking-tight);
+  --text-xl: 1.5rem; /* 24px – section titles */
+  --text-xl--line-height: 2rem;
+  --text-xl--letter-spacing: var(--tracking-tighter);
+  --text-2xl: 2rem; /* 32px – editorial headline */
+  --text-2xl--line-height: 3rem;
+  --text-2xl--letter-spacing: var(--tracking-tighter);
+  --text-3xl: 2.5rem; /* 40px */
+  --text-3xl--line-height: 3rem;
+  --text-3xl--letter-spacing: var(--tracking-tightest);
+  --text-display: clamp(2.5rem, 1.25rem + 4vw, 5rem); /* 40 → 80px */
+  --text-display--line-height: 1.05;
+  --text-display--letter-spacing: var(--tracking-tightest);
+
+  /* ---------- Shape: square corners, hairline borders ---------- */
+  --radius-*: initial;
+  --radius-xs: 2px; /* inputs, swatches */
+  --radius-full: 9999px; /* icon buttons, dots */
+
+  /* ---------- Imagery ---------- */
+  --aspect-product: 1 / 1; /* listing tiles */
+  --aspect-portrait: 3 / 4; /* editorial and category cards */
+  --aspect-landscape: 2 / 1; /* banners */
+  --aspect-cinema: 16 / 9;
+
+  /* ---------- Motion: slow, decisive ease ---------- */
+  --ease-editorial: cubic-bezier(0.5, 0, 0, 1);
+  --default-transition-duration: 300ms;
+  --default-transition-timing-function: var(--ease-editorial);
+}
+
+/*
+ * Layout tokens that change per breakpoint. Defined as runtime vars in
+ * :root (see base.css) and exposed here so utilities track the viewport:
+ * px-gutter, h-header, py-section, max-w-page, max-w-prose.
+ */
+@theme inline {
+  --spacing-gutter: var(--gutter);
+  --spacing-header: var(--header-height);
+  --spacing-section: var(--section-space);
+  --container-page: 90rem; /* 1440px */
+  --container-prose: 45rem; /*  720px */
+}

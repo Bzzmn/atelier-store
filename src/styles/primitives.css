@@ -1,0 +1,405 @@
+/*
+ * Reusable primitives, declared as Tailwind utilities so they accept
+ * variants (md:grid-12, hover:link) and compose with plain utilities.
+ */
+
+/* ======================= Layout ======================= */
+
+/* Centered content column: 1440px cap, fluid side gutters. */
+@utility page-container {
+  width: 100%;
+  max-width: var(--container-page);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* Reading column for long-form copy. */
+@utility prose-container {
+  width: 100%;
+  max-width: var(--container-prose);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* Break a child out of a container to the full viewport width. */
+@utility full-bleed {
+  width: 100vw;
+  margin-inline: calc(50% - 50vw);
+}
+
+/* Vertical rhythm between page sections. */
+@utility section-y {
+  padding-block: var(--section-space);
+}
+
+/* 12-column layout grid: 4 columns on mobile, 12 from tablet. */
+@utility grid-12 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: var(--gutter);
+
+  @media (width >= 48rem) {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+}
+
+/* Edge-to-edge product grid separated by 1px hairlines: 2 → 3 → 4 columns. */
+@utility product-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+
+  @media (width >= 48rem) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  @media (width >= 64rem) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* Editorial grid: 1 → 2 → 4 columns, flush images. */
+@utility editorial-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+
+  @media (width >= 48rem) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (width >= 64rem) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* Header row at the responsive header height (56px → 72px). */
+@utility header-bar {
+  display: flex;
+  align-items: center;
+  height: var(--header-height);
+}
+
+/* Horizontal scroller without a visible scrollbar (carousels, rails). */
+@utility scrollbar-none {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ======================= Media ======================= */
+
+/* Frame that crops its image/video to fill; set the ratio with aspect-*. */
+@utility media-frame {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--color-bg-muted);
+
+  & > img,
+  & > video,
+  & > picture > img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+/* Product shot on the neutral well, never cropped. */
+@utility media-product {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: var(--aspect-product);
+  background-color: var(--color-bg-muted);
+
+  & > img,
+  & > picture > img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+}
+
+/* Gradient scrim so overlaid text stays legible on imagery. */
+@utility scrim {
+  background-image: linear-gradient(
+    to top,
+    rgb(0 0 0 / 0.45),
+    rgb(0 0 0 / 0) 50%
+  );
+}
+
+/* ======================= Type roles ======================= */
+
+@utility type-display {
+  font-size: var(--text-display);
+  line-height: var(--text-display--line-height);
+  letter-spacing: var(--text-display--letter-spacing);
+  font-weight: 300;
+}
+
+@utility type-headline {
+  font-size: var(--text-xl);
+  line-height: var(--text-xl--line-height);
+  letter-spacing: var(--text-xl--letter-spacing);
+  font-weight: 300;
+
+  @media (width >= 64rem) {
+    font-size: var(--text-2xl);
+    line-height: var(--text-2xl--line-height);
+    letter-spacing: var(--text-2xl--letter-spacing);
+  }
+}
+
+@utility type-title {
+  font-size: var(--text-lg);
+  line-height: var(--text-lg--line-height);
+  letter-spacing: var(--text-lg--letter-spacing);
+  font-weight: 500;
+  text-transform: uppercase;
+
+  @media (width >= 64rem) {
+    font-size: var(--text-xl);
+    line-height: var(--text-xl--line-height);
+    letter-spacing: var(--text-xl--letter-spacing);
+  }
+}
+
+@utility type-subtitle {
+  font-size: var(--text-lg);
+  line-height: var(--text-lg--line-height);
+  letter-spacing: var(--text-lg--letter-spacing);
+  font-weight: 500;
+}
+
+@utility type-body {
+  font-size: var(--text-base);
+  line-height: var(--text-base--line-height);
+  letter-spacing: var(--text-base--letter-spacing);
+  font-weight: 400;
+}
+
+@utility type-body-sm {
+  font-size: var(--text-xs);
+  line-height: var(--text-xs--line-height);
+  letter-spacing: var(--text-xs--letter-spacing);
+  font-weight: 400;
+}
+
+/* Small uppercase label: buttons, nav, eyebrows, section headers. */
+@utility type-label {
+  font-size: var(--text-xs);
+  line-height: var(--text-xs--line-height);
+  letter-spacing: var(--tracking-wide);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+/* Tile names, prices, nav links. */
+@utility type-caption {
+  font-size: var(--text-xs);
+  line-height: var(--text-xs--line-height);
+  letter-spacing: var(--text-xs--letter-spacing);
+  font-weight: 500;
+}
+
+@utility type-micro {
+  font-size: var(--text-2xs);
+  line-height: var(--text-2xs--line-height);
+  letter-spacing: var(--text-2xs--letter-spacing);
+  font-weight: 500;
+}
+
+/* Serif wordmark for the store's own name. */
+@utility type-wordmark {
+  font-family: var(--font-serif);
+  font-size: var(--text-xl);
+  line-height: 1;
+  letter-spacing: var(--tracking-widest);
+  font-weight: 400;
+  text-transform: uppercase;
+
+  @media (width >= 64rem) {
+    font-size: var(--text-2xl);
+  }
+}
+
+/* ======================= Buttons ======================= */
+
+/* Base: 48px, square, uppercase label. Combine with a variant. */
+@utility btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 3rem;
+  padding-inline: 1.5rem;
+  border: 1px solid transparent;
+  border-radius: 0;
+  font-size: var(--text-xs);
+  line-height: var(--text-xs--line-height);
+  letter-spacing: var(--tracking-wide);
+  font-weight: 700;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition-property: color, background-color, border-color, opacity;
+  transition-duration: 500ms;
+  transition-timing-function: var(--ease-editorial);
+
+  &:disabled,
+  &[aria-disabled="true"] {
+    opacity: 0.4;
+    pointer-events: none;
+  }
+}
+
+@utility btn-sm {
+  min-height: 2.5rem;
+  padding-inline: 1rem;
+}
+
+/* Solid black: one per view, the main action. */
+@utility btn-primary {
+  background-color: var(--color-bg-inverse);
+  border-color: var(--color-bg-inverse);
+  color: var(--color-fg-inverse);
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-fg-muted);
+      border-color: var(--color-fg-muted);
+    }
+  }
+}
+
+/* Black hairline outline on white. */
+@utility btn-secondary {
+  background-color: transparent;
+  border-color: var(--color-border-strong);
+  color: var(--color-fg);
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-bg-inverse);
+      color: var(--color-fg-inverse);
+    }
+  }
+}
+
+/* White outline for use over imagery or dark sections. */
+@utility btn-inverse {
+  background-color: transparent;
+  border-color: var(--color-white);
+  color: var(--color-white);
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-white);
+      color: var(--color-black);
+    }
+  }
+}
+
+/* Text-only action with an underline; same label type. */
+@utility btn-ghost {
+  min-height: auto;
+  padding-inline: 0;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.25em;
+
+  @media (hover: hover) {
+    &:hover {
+      color: var(--color-fg-muted);
+    }
+  }
+}
+
+/* Round 40px icon button (carousel arrows, close). */
+@utility btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-full);
+  transition: background-color 300ms var(--ease-editorial);
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-bg-subtle);
+    }
+  }
+}
+
+/* ======================= Links ======================= */
+
+/* Inline link: always underlined, thin and offset. */
+@utility link {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  transition: color 300ms var(--ease-editorial);
+
+  @media (hover: hover) {
+    &:hover {
+      color: var(--color-fg-muted);
+    }
+  }
+}
+
+/* Navigation link: no underline at rest, underline on hover/active. */
+@utility link-quiet {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  text-decoration-color: transparent;
+  transition: text-decoration-color 300ms var(--ease-editorial);
+
+  &:hover,
+  &[aria-current="page"] {
+    text-decoration-color: currentColor;
+  }
+}
+
+/* ======================= Borders & forms ======================= */
+
+/* Hairline rules. */
+@utility hairline-t {
+  border-top: 1px solid var(--color-border);
+}
+
+@utility hairline-b {
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* Underlined text field: bottom border only, label-sized type. */
+@utility field {
+  display: block;
+  width: 100%;
+  min-height: 3rem;
+  padding-block: 0.75rem 0.5rem;
+  border: 0;
+  border-bottom: 1px solid var(--color-border-strong);
+  border-radius: 0;
+  background: transparent;
+  font-size: var(--text-base); /* 16px prevents iOS zoom on focus */
+  line-height: var(--text-base--line-height);
+
+  &::placeholder {
+    color: var(--color-fg-subtle);
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-bottom-width: 2px;
+  }
+
+  &[aria-invalid="true"] {
+    border-bottom-color: var(--color-error);
+  }
+}
