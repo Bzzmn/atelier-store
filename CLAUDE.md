@@ -26,20 +26,26 @@ pnpm db:push        # push schema directly (prototyping only)
 pnpm db:studio      # Drizzle Studio
 pnpm db:seed        # idempotent catalog seed (tsx, src/db/seed.ts)
 
-pnpm auth:generate  # Better Auth CLI (via pnpm dlx) → writes src/db/schema/auth.ts
+pnpm auth:generate      # Better Auth CLI (`auth@1.7.7` via pnpm dlx) → writes src/db/schema/auth.ts
+pnpm auth:create-admin  # create an admin user (--email, --name; prompts for the password)
+scripts/auth-smoke.sh   # curl smoke test of the auth flows against a running dev server
 ```
 
 No test runner is configured yet.
 
-Env vars live in `.env.local` or `.env` (template: `.env.example`): `DATABASE_URL` (Neon pooled URL), `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`. Next loads both natively; `drizzle.config.ts` (dotenv) and `db:seed` (`--env-file-if-exists`) load both too, with `.env.local` taking precedence.
+Env vars live in `.env.local` or `.env` (template: `.env.example`): `DATABASE_URL` (Neon pooled URL), `BETTER_AUTH_SECRET` (32+ chars, `openssl rand -base64 32`; without it Better Auth signs cookies with a public default and production throws), `BETTER_AUTH_URL`. Next loads both natively; `drizzle.config.ts` (dotenv) and `db:seed` (`--env-file-if-exists`) load both too, with `.env.local` taking precedence.
 
 ## Architecture
 
 - **DB client** — `src/db/index.ts` exports `db`, a Drizzle client over Neon's HTTP driver (`drizzle-orm/neon-http`). It is stateless per query, so it has no interactive transactions; switch to the `neon-serverless` (WebSocket) driver if those are needed.
 - **Schema** — `src/db/schema/index.ts` is the barrel that both `db` (typed relational queries) and drizzle-kit (`schema: "./src/db/schema"`) read. Every new table file must be re-exported from it.
-- **Auth server** — `src/lib/auth.ts` exports `auth`, built on the Drizzle adapter (`provider: "pg"`) and the shared `db`. No sign-in methods are enabled yet. `nextCookies()` must remain the **last** plugin.
-- **Auth tables** — Better Auth's tables are generated, not handwritten. After changing auth config or plugins, run `pnpm auth:generate`, ensure `export * from "./auth"` is in the schema barrel, then `pnpm db:generate && pnpm db:migrate`. Auth endpoints fail at runtime until these tables exist.
-- **Auth HTTP** — `src/app/api/auth/[...all]/route.ts` mounts the handler with `toNextJsHandler(auth)`. Client components use `authClient` from `src/lib/auth-client.ts` (same-origin, no baseURL). On the server, call `auth.api.*` directly with `headers: await headers()` instead of using the client.
+- **Auth server** — `src/lib/auth.ts` exports `auth`, built on the Drizzle adapter (`provider: "pg"`) and the shared `db`. Email & password only (no email verification, reset or social login yet). Sign-up asks only for email and password; Better Auth requires `name`, so it's stored as `""`. Treat `user.name` as optional in the UI. Sessions last 30 days, slide once a day, and use a 5-minute cookie cache. The `admin` plugin adds `user.role` (`"user"` | `"admin"`), which sign-up can't set. `nextCookies()` must remain the **last** plugin. The CLI is the `auth` package pinned to the installed `better-auth` version (`@better-auth/cli` is deprecated and stuck on 1.4).
+- **Auth tables** — Better Auth's tables are generated, not handwritten. After changing auth config or plugins, run `pnpm auth:generate`, then `pnpm db:generate && pnpm db:migrate`. `src/db/schema/auth.ts` is re-exported from the schema barrel; don't edit it by hand.
+- **Auth HTTP** — `src/app/api/auth/[...all]/route.ts` mounts the handler with `toNextJsHandler(auth)`. Sign-in and sign-up forms (`src/components/auth/auth-form.tsx`) call `authClient` (`src/lib/auth-client.ts`) so requests go through that handler: Better Auth's rate limiter and origin check only run on HTTP requests, so don't move credential checks into server actions that call `auth.api.signInEmail()` directly. Sign-out is a server action (`src/app/(auth)/actions.ts`).
+- **Sessions on the server** — read the session only through `src/lib/session.ts` (`server-only`): `getSession()`, `requireSession(returnTo)` (redirects to `/sign-in?next=`), `requireAdmin()` (bypasses the cookie cache; non-admins get a 404) and `safeNext()` (same-origin redirect targets only). Every protected page **and** server action must call one of these itself. Layout checks alone aren't enough.
+- **Proxy** — `src/proxy.ts` matches `/account/*` and `/admin/*` and only redirects when there's no session cookie (`getSessionCookie`). It does not validate the cookie and isn't a security boundary.
+- **Keep catalog pages static** — don't read the session (or `headers()`/cookies) in the root layout, `SiteHeader` or catalog pages; that would make every ISR page dynamic. RSCs can't write cookies, so protected pages render `SessionKeepAlive`, which calls `/api/auth/get-session` to slide the session expiry.
+- **Auth routes** — `/sign-in` and `/sign-up` (`src/app/(auth)/`, `?next=` return path), `/account` (customer) and `/admin` (admin placeholder). All are dynamic and `noindex`.
 
 ## Design system
 
