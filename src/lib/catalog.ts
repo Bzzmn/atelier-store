@@ -1,4 +1,4 @@
-import { asc, desc, eq, inArray, ne } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, inArray, ne, or, sql } from "drizzle-orm";
 import { cache } from "react";
 
 import { db } from "@/db";
@@ -134,3 +134,47 @@ export async function getRelatedProducts(product: Product, limit = 4) {
   });
   return rows.map(toProduct);
 }
+
+/** Escapes LIKE wildcards so user input is matched literally. */
+function likePattern(term: string) {
+  return `%${term.replace(/[\\%_]/g, "\\$&")}%`;
+}
+
+/**
+ * Products where every word of the query appears in the name, color, category or
+ * description. Products whose names contain the most query words rank first, then newest.
+ */
+export const searchProducts = cache(async (query: string, limit = 48) => {
+  const terms = query.trim().split(/\s+/).filter(Boolean).slice(0, 6);
+  if (terms.length === 0) return [];
+
+  const matchesTerm = (term: string) => {
+    const pattern = likePattern(term);
+    return or(
+      ilike(products.name, pattern),
+      ilike(products.color, pattern),
+      ilike(products.description, pattern),
+      inArray(
+        products.categoryId,
+        db.select({ id: categories.id }).from(categories).where(ilike(categories.name, pattern)),
+      ),
+    );
+  };
+
+  const nameMatches = sql.join(
+    terms.map((term) => sql`(${ilike(products.name, likePattern(term))})::int`),
+    sql` + `,
+  );
+
+  const rows = await db.query.products.findMany({
+    where: and(...terms.map(matchesTerm)),
+    orderBy: [
+      desc(nameMatches),
+      desc(products.createdAt),
+      asc(products.id),
+    ],
+    limit,
+    with: withRelations,
+  });
+  return rows.map(toProduct);
+});
