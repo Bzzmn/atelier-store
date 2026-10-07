@@ -1,11 +1,12 @@
 import Link from "next/link";
 
-import { ProductCard } from "@/components/product/product-card";
+import { Breadcrumbs, type Crumb } from "@/components/breadcrumbs";
+import { ProductGrid } from "@/components/product/product-grid";
 import type { Product } from "@/lib/catalog";
 
 type ProductListingProps = {
   /** Breadcrumb trail after "Home"; the last entry is the current page. */
-  breadcrumbs: { label: string; href?: string }[];
+  breadcrumbs: Crumb[];
   eyebrow: string;
   title: string;
   description?: string;
@@ -23,29 +24,7 @@ export function ProductListing({
   return (
     <main className="flex-1 pt-header pb-section">
       <div className="page-container pt-10 pb-8 md:pt-14 md:pb-10">
-        <nav aria-label="Breadcrumb">
-          <ol className="type-micro flex flex-wrap items-center gap-2 text-fg-muted">
-            <li>
-              <Link href="/" className="link-quiet">
-                Home
-              </Link>
-            </li>
-            {breadcrumbs.map((crumb, index) => (
-              <li key={crumb.label} className="flex items-center gap-2">
-                <span aria-hidden="true">/</span>
-                {index === breadcrumbs.length - 1 ? (
-                  <span aria-current="page" className="text-fg">
-                    {crumb.label}
-                  </span>
-                ) : (
-                  <Link href={crumb.href ?? "/"} className="link-quiet">
-                    {crumb.label}
-                  </Link>
-                )}
-              </li>
-            ))}
-          </ol>
-        </nav>
+        <Breadcrumbs items={breadcrumbs} />
 
         <div className="mt-8 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div>
@@ -68,14 +47,7 @@ export function ProductListing({
           <h2 id="listing-products-title" className="sr-only">
             Products
           </h2>
-          <ul className="product-grid hairline-t">
-            {products.map((product, index) => (
-              <li key={product.slug}>
-                {/* The first row (four cards on desktop) sits above the fold. */}
-                <ProductCard product={product} preload={index < 4} />
-              </li>
-            ))}
-          </ul>
+          <ProductGrid products={products} />
         </section>
       ) : (
         <div className="prose-container section-y hairline-t flex flex-col items-center text-center">

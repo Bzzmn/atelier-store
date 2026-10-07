@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { Breadcrumbs } from "@/components/breadcrumbs";
 import { Disclosure } from "@/components/product/disclosure";
 import { StockStatus } from "@/components/product/stock-status";
 import { formatPrice } from "@/lib/format";
@@ -11,25 +12,9 @@ export function ProductInfo({ product }: { product: Product }) {
 
   return (
     <div className="flex flex-col">
-      <nav aria-label="Breadcrumb">
-        <ol className="type-micro flex flex-wrap items-center gap-2 text-fg-muted">
-          <li>
-            <Link href="/" className="link-quiet">
-              Home
-            </Link>
-          </li>
-          <li aria-hidden="true">/</li>
-          <li>
-            <Link href={categoryHref} className="link-quiet">
-              {product.category.name}
-            </Link>
-          </li>
-          <li aria-hidden="true">/</li>
-          <li aria-current="page" className="text-fg">
-            {product.name}
-          </li>
-        </ol>
-      </nav>
+      <Breadcrumbs
+        items={[{ label: product.category.name, href: categoryHref }, { label: product.name }]}
+      />
 
       <div className="mt-8 flex flex-col gap-3">
         {product.badge && <p className="type-micro">{product.badge}</p>}
