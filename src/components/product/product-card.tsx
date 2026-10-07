@@ -7,11 +7,14 @@ import type { Product } from "@/lib/catalog";
 type ProductCardProps = {
   product: Product;
   sizes?: string;
+  /** Set on above-the-fold cards so the image isn't lazy-loaded. */
+  preload?: boolean;
 };
 
 export function ProductCard({
   product,
   sizes = "(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw",
+  preload = false,
 }: ProductCardProps) {
   return (
     <Link href={`/products/${product.slug}`} className="group block bg-bg">
@@ -21,6 +24,7 @@ export function ProductCard({
           alt={product.image.alt}
           fill
           sizes={sizes}
+          preload={preload}
           className="transition-transform duration-700 group-hover:scale-[1.03]"
         />
         {(product.stock <= 0 || product.badge) && (

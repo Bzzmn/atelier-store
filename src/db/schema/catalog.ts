@@ -3,11 +3,17 @@ import {
   check,
   index,
   integer,
+  pgEnum,
   pgTable,
   text,
   timestamp,
   unique,
 } from "drizzle-orm/pg-core";
+
+// Unisex products are listed under both women and men.
+export const genderEnum = pgEnum("gender", ["women", "men", "unisex"]);
+
+export type Gender = (typeof genderEnum.enumValues)[number];
 
 export const categories = pgTable("categories", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
@@ -28,6 +34,7 @@ export const products = pgTable(
     color: text("color").notNull(),
     badge: text("badge"),
     stock: integer("stock").notNull().default(0), // units available
+    gender: genderEnum("gender").notNull().default("unisex"),
     categoryId: integer("category_id")
       .notNull()
       .references(() => categories.id, { onDelete: "restrict" }),
@@ -40,6 +47,7 @@ export const products = pgTable(
   (table) => [
     index("products_category_id_idx").on(table.categoryId),
     index("products_created_at_idx").on(table.createdAt),
+    index("products_gender_idx").on(table.gender),
     check("products_price_nonnegative", sql`${table.price} >= 0`),
     check("products_stock_nonnegative", sql`${table.stock} >= 0`),
   ],
