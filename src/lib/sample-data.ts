@@ -79,7 +79,10 @@ export const categories: Collection[] = [
   },
 ];
 
-export const featuredCollection: Collection & { productSlugs: string[] } = {
+/** A collection with its own /collections/[slug] page, listing these products in order. */
+export type ProductCollection = Collection & { productSlugs: string[] };
+
+export const featuredCollection: ProductCollection = {
   slug: "tailoring",
   eyebrow: "The Collection",
   title: "Modern Tailoring",
@@ -90,11 +93,16 @@ export const featuredCollection: Collection & { productSlugs: string[] } = {
     src: unsplash("1507679799987-c73779587ccf", 2000),
     alt: "Man buttoning a navy suit jacket over a striped tie",
   },
+  // Order matters: the homepage previews the first PREVIEW_COUNT (featured-collection.tsx).
   productSlugs: [
-    "chambray-work-shirt",
+    "windowpane-wool-blazer",
+    "double-breasted-check-blazer",
+    "peak-lapel-dinner-jacket",
+    "belted-wool-wrap-coat",
+    "windowpane-three-piece-suit",
+    "striped-poplin-shirt",
+    "pleated-wool-trouser",
     "polished-leather-derby",
-    "round-metal-sunglasses",
-    "nylon-city-backpack",
   ],
 };
 
@@ -110,28 +118,55 @@ export const editorialBanner = {
   },
 };
 
-export const collectionDuo: Collection[] = [
+export const collectionDuo: ProductCollection[] = [
   {
     slug: "outerwear",
     eyebrow: "Women",
     title: "Statement Outerwear",
+    description:
+      "Coats and jackets with something to say: sculpted wool, glossy down, suede and shearling in colours made for winter light.",
     href: "/collections/outerwear",
     image: {
       src: unsplash("1539109136881-3be0616acf4b", 1600),
       alt: "Woman in a long powder-blue coat in front of a gothic cathedral",
     },
+    productSlugs: [
+      "oversized-puffer-jacket",
+      "ruffle-placket-wool-coat",
+      "shearling-trim-suede-jacket",
+      "hooded-boucle-coat",
+      "lambskin-biker-jacket",
+      "belted-wool-wrap-coat",
+      "cotton-utility-jacket",
+      "satin-bomber-jacket",
+    ],
   },
   {
     slug: "leather",
     eyebrow: "Men",
     title: "The Leather Edit",
+    description:
+      "Jackets, boots and small leather goods in full-grain hides, made to soften, darken and take on the shape of the life they're worn in.",
     href: "/collections/leather",
     image: {
       src: unsplash("1487222477894-8943e31ef7b2", 1600),
       alt: "Man in a tan leather jacket and round sunglasses",
     },
+    productSlugs: [
+      "leather-bomber-jacket",
+      "shearling-aviator-jacket",
+      "cap-toe-leather-boot",
+      "polished-leather-derby",
+      "grained-leather-backpack",
+      "full-grain-leather-belt",
+      "bifold-leather-wallet",
+      "lace-up-work-boot",
+    ],
   },
 ];
+
+// Collections with their own /collections/[slug] page.
+export const collectionPages: ProductCollection[] = [featuredCollection, ...collectionDuo];
 
 export const services = [
   {

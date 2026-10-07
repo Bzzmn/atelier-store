@@ -4,13 +4,21 @@
 import { inArray, sql } from "drizzle-orm";
 
 import { slugify } from "@/lib/format";
+import { collectionPages } from "@/lib/sample-data";
 
 import { db } from "./index";
 import { categories, productImages, products } from "./schema";
-import { newArrivals, type SeedProduct, seedCategories, tailoringEdit } from "./seed-data";
+import {
+  leatherEdit,
+  newArrivals,
+  outerwearEdit,
+  type SeedProduct,
+  seedCategories,
+  tailoringEdit,
+} from "./seed-data";
 
 // Fixed timestamps keep the homepage order stable across re-seeds: New Arrivals
-// are newest (in listed order), the tailoring edit is older.
+// are newest (in listed order), then the tailoring, outerwear and leather edits.
 const BASE_DATE = Date.UTC(2026, 8, 1);
 const MINUTE = 60_000;
 
@@ -21,15 +29,29 @@ function withCreatedAt(list: SeedProduct[], offsetMinutes: number) {
   }));
 }
 
+// Collection pages silently skip unknown slugs, so a typo would just shrink the page.
+function assertCollectionsResolve(seededSlugs: Set<string>) {
+  const missing = collectionPages.flatMap(({ slug, productSlugs }) =>
+    productSlugs.filter((productSlug) => !seededSlugs.has(productSlug)).map((s) => `${slug}: ${s}`),
+  );
+  if (missing.length > 0) throw new Error(`Collections reference unknown products:\n${missing.join("\n")}`);
+}
+
 async function main() {
+  const seeded = [
+    ...withCreatedAt(newArrivals, 0),
+    ...withCreatedAt(tailoringEdit, 24 * 60),
+    ...withCreatedAt(outerwearEdit, 48 * 60),
+    ...withCreatedAt(leatherEdit, 72 * 60),
+  ];
+  assertCollectionsResolve(new Set(seeded.map(({ product }) => product.slug)));
+
   const categoryRows = await db
     .insert(categories)
     .values(seedCategories.map((name) => ({ slug: slugify(name), name })))
     .onConflictDoUpdate({ target: categories.slug, set: { name: sql`excluded.name` } })
     .returning({ id: categories.id, name: categories.name });
   const categoryIds = new Map(categoryRows.map((row) => [row.name, row.id]));
-
-  const seeded = [...withCreatedAt(newArrivals, 0), ...withCreatedAt(tailoringEdit, 24 * 60)];
 
   const productRows = await db
     .insert(products)

@@ -5,9 +5,13 @@ import { ProductCard } from "@/components/product/product-card";
 import { getProductsBySlugs } from "@/lib/catalog";
 import { featuredCollection } from "@/lib/sample-data";
 
+// A 2×2 preview; the full edit is on the collection page.
+const PREVIEW_COUNT = 4;
+
 export async function FeaturedCollection() {
   const { image, productSlugs } = featuredCollection;
-  const products = await getProductsBySlugs(productSlugs);
+  // Slice after the lookup, so a missing product is replaced by the next one rather than leaving a gap.
+  const products = (await getProductsBySlugs(productSlugs)).slice(0, PREVIEW_COUNT);
 
   return (
     <section aria-labelledby="featured-title" className="section-y">
