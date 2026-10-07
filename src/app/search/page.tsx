@@ -1,48 +1,37 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Suspense } from "react";
+import { type ReactNode, Suspense } from "react";
 
-import { ProductCard } from "@/components/product/product-card";
-import { ProductCardSkeleton } from "@/components/product/product-card-skeleton";
+import { Breadcrumbs } from "@/components/breadcrumbs";
+import { ProductGrid, ProductGridSkeleton } from "@/components/product/product-grid";
 import { SearchForm } from "@/components/search/search-form";
+import { SearchResultsGrid } from "@/components/search/search-results-grid";
 import { Skeleton } from "@/components/skeleton";
-import { getNewArrivals, searchProducts } from "@/lib/catalog";
+import { getNewArrivals, searchProducts, searchTerms } from "@/lib/catalog";
 
-function readQuery(q: string | string[] | undefined) {
+// What the visitor typed, echoed back into the form (capped like the input's maxLength);
+// searchTerms() decides which words of it are actually searched.
+async function readQuery(searchParams: PageProps<"/search">["searchParams"]) {
+  const { q } = await searchParams;
   return (Array.isArray(q) ? q[0] : q)?.trim().slice(0, 100) ?? "";
 }
 
 export async function generateMetadata({ searchParams }: PageProps<"/search">): Promise<Metadata> {
-  const query = readQuery((await searchParams).q);
+  const terms = searchTerms(await readQuery(searchParams));
   return {
-    title: query ? `“${query}” – Search` : "Search",
+    title: terms.length > 0 ? `“${terms.join(" ")}” – Search` : "Search",
     // Result pages are endless permutations of the catalog; keep them out of the index.
     robots: { index: false, follow: true },
   };
 }
 
 export default async function SearchPage({ searchParams }: PageProps<"/search">) {
-  const query = readQuery((await searchParams).q);
+  const query = await readQuery(searchParams);
 
   return (
     <main className="flex-1 pt-header pb-section">
       <div className="page-container pt-10 pb-8 md:pt-14 md:pb-10">
-        <nav aria-label="Breadcrumb">
-          <ol className="type-micro flex flex-wrap items-center gap-2 text-fg-muted">
-            <li>
-              <Link href="/" className="link-quiet">
-                Home
-              </Link>
-            </li>
-            <li className="flex items-center gap-2">
-              <span aria-hidden="true">/</span>
-              <span aria-current="page" className="text-fg">
-                Search
-              </span>
-            </li>
-          </ol>
-        </nav>
-
+        <Breadcrumbs items={[{ label: "Search" }]} />
         <h1 className="type-headline mt-8">Search</h1>
         <div className="mt-6 max-w-xl">
           <SearchForm defaultQuery={query} />
@@ -57,32 +46,30 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
 }
 
 async function SearchResults({ query }: { query: string }) {
-  const products = query ? await searchProducts(query) : await getNewArrivals(8);
+  const { terms, products, total } = await searchProducts(query);
+  const searched = terms.join(" ");
 
-  let summary: string;
-  if (!query) summary = "New arrivals";
-  else if (products.length === 0) summary = `No results for “${query}”`;
-  else summary = `${products.length} ${products.length === 1 ? "result" : "results"} for “${query}”`;
+  // Nothing searchable: suggest the newest pieces instead, and say why if something was typed.
+  if (terms.length === 0) {
+    return (
+      <ResultsSection
+        title="Suggestions"
+        summary={query ? "Type at least 2 letters to search. Showing new arrivals." : "New arrivals"}
+      >
+        <ProductGrid products={await getNewArrivals(8)} />
+      </ResultsSection>
+    );
+  }
+
+  const summary =
+    total === 0
+      ? `No results for “${searched}”`
+      : `${total} ${total === 1 ? "result" : "results"} for “${searched}”`;
 
   return (
-    <section aria-labelledby="search-results-title">
-      <div className="page-container pb-4">
-        <h2 id="search-results-title" className="sr-only">
-          {query ? "Search results" : "New arrivals"}
-        </h2>
-        <p role="status" className="type-label">
-          {summary}
-        </p>
-      </div>
-
-      {products.length > 0 ? (
-        <ul className="product-grid hairline-t">
-          {products.map((product, index) => (
-            <li key={product.slug}>
-              <ProductCard product={product} preload={index < 4} />
-            </li>
-          ))}
-        </ul>
+    <ResultsSection title="Search results" summary={summary}>
+      {total > 0 ? (
+        <SearchResultsGrid key={searched} query={query} initialProducts={products} total={total} />
       ) : (
         <div className="prose-container section-y hairline-t flex flex-col items-center text-center">
           <p className="type-body text-fg-muted">
@@ -93,6 +80,33 @@ async function SearchResults({ query }: { query: string }) {
           </Link>
         </div>
       )}
+    </ResultsSection>
+  );
+}
+
+// The summary is the live region, so screen readers hear every change of results (including
+// clearing the search); the heading is visually hidden and worded differently so it isn't
+// read twice.
+function ResultsSection({
+  title,
+  summary,
+  children,
+}: {
+  title: string;
+  summary: string;
+  children: ReactNode;
+}) {
+  return (
+    <section aria-labelledby="search-results-title">
+      <div className="page-container pb-4">
+        <h2 id="search-results-title" className="sr-only">
+          {title}
+        </h2>
+        <p role="status" className="type-label">
+          {summary}
+        </p>
+      </div>
+      {children}
     </section>
   );
 }
@@ -107,13 +121,7 @@ function ResultsSkeleton() {
       <div className="page-container pb-4">
         <Skeleton className="h-4 w-40" />
       </div>
-      <ul aria-hidden="true" className="product-grid hairline-t">
-        {Array.from({ length: 8 }, (_, index) => (
-          <li key={index}>
-            <ProductCardSkeleton />
-          </li>
-        ))}
-      </ul>
+      <ProductGridSkeleton />
     </div>
   );
 }

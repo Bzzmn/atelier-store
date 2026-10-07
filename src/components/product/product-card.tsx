@@ -2,10 +2,10 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { formatPrice } from "@/lib/format";
-import type { Product } from "@/lib/catalog";
+import type { ProductSummary } from "@/lib/catalog";
 
 type ProductCardProps = {
-  product: Product;
+  product: ProductSummary;
   sizes?: string;
   /** Set on above-the-fold cards so the image isn't lazy-loaded. */
   preload?: boolean;

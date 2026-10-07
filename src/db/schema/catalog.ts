@@ -1,6 +1,7 @@
-import { relations, sql } from "drizzle-orm";
+import { relations, type SQL, sql } from "drizzle-orm";
 import {
   check,
+  customType,
   index,
   integer,
   pgEnum,
@@ -14,6 +15,10 @@ import {
 export const genderEnum = pgEnum("gender", ["women", "men", "unisex"]);
 
 export type Gender = (typeof genderEnum.enumValues)[number];
+
+const tsvector = customType<{ data: string }>({
+  dataType: () => "tsvector",
+});
 
 export const categories = pgTable("categories", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
@@ -43,11 +48,18 @@ export const products = pgTable(
       .notNull()
       .defaultNow()
       .$onUpdate(() => new Date()),
+    // Full-text index of the searchable copy; weights rank name > color > description.
+    searchVector: tsvector("search_vector").generatedAlwaysAs(
+      (): SQL => sql`setweight(to_tsvector('simple', ${products.name}), 'A')
+        || setweight(to_tsvector('simple', ${products.color}), 'B')
+        || setweight(to_tsvector('simple', ${products.description}), 'C')`,
+    ),
   },
   (table) => [
     index("products_category_id_idx").on(table.categoryId),
     index("products_created_at_idx").on(table.createdAt),
     index("products_gender_idx").on(table.gender),
+    index("products_search_vector_idx").using("gin", table.searchVector),
     check("products_price_nonnegative", sql`${table.price} >= 0`),
     check("products_stock_nonnegative", sql`${table.stock} >= 0`),
   ],

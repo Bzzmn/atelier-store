@@ -1,4 +1,4 @@
-import { ProductCardSkeleton } from "@/components/product/product-card-skeleton";
+import { ProductGridSkeleton } from "@/components/product/product-grid";
 import { Skeleton } from "@/components/skeleton";
 
 // Loading state for ProductListing pages; keeps the same container and spacing.
@@ -21,13 +21,7 @@ export function ProductListingSkeleton() {
         </div>
       </div>
 
-      <ul aria-hidden="true" className="product-grid hairline-t">
-        {Array.from({ length: 8 }, (_, index) => (
-          <li key={index}>
-            <ProductCardSkeleton />
-          </li>
-        ))}
-      </ul>
+      <ProductGridSkeleton />
     </main>
   );
 }
