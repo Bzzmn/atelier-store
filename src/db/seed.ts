@@ -46,6 +46,7 @@ async function main() {
           color: product.color,
           badge: product.badge ?? null,
           stock: product.stock,
+          gender: product.gender,
           categoryId,
           createdAt,
         };
@@ -61,6 +62,7 @@ async function main() {
         color: sql`excluded.color`,
         badge: sql`excluded.badge`,
         stock: sql`excluded.stock`,
+        gender: sql`excluded.gender`,
         categoryId: sql`excluded.category_id`,
         createdAt: sql`excluded.created_at`,
         updatedAt: sql`now()`,

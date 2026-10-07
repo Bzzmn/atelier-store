@@ -2,7 +2,7 @@ import { asc, desc, eq, inArray, ne } from "drizzle-orm";
 import { cache } from "react";
 
 import { db } from "@/db";
-import { categories, productImages, products } from "@/db/schema";
+import { categories, type Gender, productImages, products } from "@/db/schema";
 
 export type ImageAsset = {
   src: string;
@@ -84,6 +84,39 @@ export const getProductsBySlugs = cache(async (slugs: string[]) => {
   });
   const bySlug = new Map(rows.map((row) => [row.slug, toProduct(row)]));
   return slugs.flatMap((slug) => bySlug.get(slug) ?? []);
+});
+
+export const getCategory = cache(async (slug: string) => {
+  const [category] = await db
+    .select({ id: categories.id, slug: categories.slug, name: categories.name })
+    .from(categories)
+    .where(eq(categories.slug, slug));
+  return category;
+});
+
+export const getCategorySlugs = cache(async () => {
+  const rows = await db.select({ slug: categories.slug }).from(categories);
+  return rows.map((row) => row.slug);
+});
+
+/** A category's products, newest first. */
+export const getProductsByCategory = cache(async (categoryId: number) => {
+  const rows = await db.query.products.findMany({
+    where: eq(products.categoryId, categoryId),
+    orderBy: [desc(products.createdAt), asc(products.id)],
+    with: withRelations,
+  });
+  return rows.map(toProduct);
+});
+
+/** Products for women or men, newest first. Unisex pieces are included in both. */
+export const getProductsByGender = cache(async (gender: Exclude<Gender, "unisex">) => {
+  const rows = await db.query.products.findMany({
+    where: inArray(products.gender, [gender, "unisex"]),
+    orderBy: [desc(products.createdAt), asc(products.id)],
+    with: withRelations,
+  });
+  return rows.map(toProduct);
 });
 
 /** Same-category products first, topped up with the rest of the catalog. */

@@ -1,6 +1,7 @@
 // Seed catalog for `pnpm db:seed`, moved from the original placeholder data.
 // Photography: Unsplash (https://unsplash.com/license).
 
+import type { Gender } from "@/db/schema";
 import type { ImageAsset } from "@/lib/catalog";
 import { detail, unsplash } from "@/lib/unsplash";
 
@@ -8,6 +9,7 @@ export type SeedProduct = {
   slug: string;
   name: string;
   category: string; // category name; must match one in `seedCategories`
+  gender: Gender;
   price: number; // minor units (cents)
   image: ImageAsset; // primary shot, used on cards
   gallery: ImageAsset[]; // additional shots for the detail page
@@ -34,6 +36,7 @@ export const newArrivals: SeedProduct[] = [
     slug: "lambskin-biker-jacket",
     name: "Lambskin biker jacket",
     category: "Outerwear",
+    gender: "women",
     price: 289000,
     badge: "New",
     color: "Black",
@@ -66,6 +69,7 @@ export const newArrivals: SeedProduct[] = [
     slug: "chevron-chain-shoulder-bag",
     name: "Chevron chain shoulder bag",
     category: "Bags",
+    gender: "women",
     price: 168000,
     color: "Blush",
     stock: 2,
@@ -97,6 +101,7 @@ export const newArrivals: SeedProduct[] = [
     slug: "open-knit-cotton-poncho",
     name: "Open-knit cotton poncho",
     category: "Knitwear",
+    gender: "women",
     price: 98000,
     badge: "Limited",
     color: "Ecru",
@@ -128,6 +133,7 @@ export const newArrivals: SeedProduct[] = [
     slug: "grained-leather-backpack",
     name: "Grained leather backpack",
     category: "Bags",
+    gender: "unisex",
     price: 215000,
     color: "Cognac",
     stock: 12,
@@ -159,6 +165,7 @@ export const newArrivals: SeedProduct[] = [
     slug: "panelled-runner-sneaker",
     name: "Panelled runner sneaker",
     category: "Shoes",
+    gender: "unisex",
     price: 89000,
     badge: "New",
     color: "Multicolour",
@@ -191,6 +198,7 @@ export const newArrivals: SeedProduct[] = [
     slug: "freshwater-pearl-necklace",
     name: "Freshwater pearl necklace",
     category: "Jewelry",
+    gender: "women",
     price: 125000,
     color: "Pearl",
     stock: 3,
@@ -221,6 +229,7 @@ export const newArrivals: SeedProduct[] = [
     slug: "crystal-drop-earrings",
     name: "Crystal drop earrings",
     category: "Jewelry",
+    gender: "women",
     price: 74000,
     color: "Sapphire",
     stock: 9,
@@ -251,6 +260,7 @@ export const newArrivals: SeedProduct[] = [
     slug: "pleated-wool-trouser",
     name: "Pleated wool trouser",
     category: "Ready-to-wear",
+    gender: "women",
     price: 86000,
     color: "Dusty Blue",
     stock: 15,
@@ -285,6 +295,7 @@ export const tailoringEdit: SeedProduct[] = [
     slug: "chambray-work-shirt",
     name: "Chambray work shirt",
     category: "Ready-to-wear",
+    gender: "men",
     price: 64000,
     color: "Light Blue",
     stock: 20,
@@ -315,6 +326,7 @@ export const tailoringEdit: SeedProduct[] = [
     slug: "polished-leather-derby",
     name: "Polished leather derby",
     category: "Shoes",
+    gender: "men",
     price: 92000,
     color: "Tan",
     stock: 1,
@@ -345,6 +357,7 @@ export const tailoringEdit: SeedProduct[] = [
     slug: "round-metal-sunglasses",
     name: "Round metal sunglasses",
     category: "Eyewear",
+    gender: "unisex",
     price: 52000,
     color: "Gold / Green",
     stock: 0,
@@ -375,6 +388,7 @@ export const tailoringEdit: SeedProduct[] = [
     slug: "nylon-city-backpack",
     name: "Nylon city backpack",
     category: "Bags",
+    gender: "unisex",
     price: 115000,
     color: "Navy",
     stock: 6,
