@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { useBagCount } from "@/components/bag/use-bag-count";
 import { BagIcon, CloseIcon, MenuIcon, SearchIcon, UserIcon } from "@/components/icons";
 import { navigation } from "@/lib/sample-data";
 
@@ -14,6 +15,7 @@ export function SiteHeader() {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const bagCount = useBagCount();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -69,8 +71,21 @@ export function SiteHeader() {
             <Link href="/account" className="p-2" aria-label="Account">
               <UserIcon />
             </Link>
-            <Link href="/bag" className="p-2" aria-label="Shopping bag">
+            <Link
+              href="/bag"
+              className="flex items-center gap-1 p-2"
+              aria-label={
+                bagCount > 0
+                  ? `Shopping bag, ${bagCount} ${bagCount === 1 ? "item" : "items"}`
+                  : "Shopping bag"
+              }
+            >
               <BagIcon />
+              {bagCount > 0 && (
+                <span aria-hidden="true" className="type-micro tabular-nums">
+                  {bagCount > 99 ? "99+" : bagCount}
+                </span>
+              )}
             </Link>
           </nav>
         </div>

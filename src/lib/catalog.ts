@@ -29,7 +29,7 @@ export type ProductSummary = Pick<
   "slug" | "name" | "category" | "price" | "image" | "badge" | "stock"
 >;
 
-function toSummary({ slug, name, category, price, image, badge, stock }: Product): ProductSummary {
+export function toSummary({ slug, name, category, price, image, badge, stock }: Product): ProductSummary {
   return { slug, name, category, price, image, badge, stock };
 }
 
@@ -99,6 +99,20 @@ export const getProductsBySlugs = cache(async (slugs: string[]) => {
   const bySlug = new Map(rows.map((row) => [row.slug, toProduct(row)]));
   return slugs.flatMap((slug) => bySlug.get(slug) ?? []);
 });
+
+/**
+ * Current stock per slug, straight from the database. Deliberately not `cache`d: the bag
+ * actions call it to validate quantities and must see stock as of this request.
+ * Unknown slugs are absent from the map.
+ */
+export async function getStockBySlugs(slugs: string[]) {
+  if (slugs.length === 0) return new Map<string, number>();
+  const rows = await db
+    .select({ slug: products.slug, stock: products.stock })
+    .from(products)
+    .where(inArray(products.slug, slugs));
+  return new Map(rows.map((row) => [row.slug, row.stock]));
+}
 
 export const getCategory = cache(async (slug: string) => {
   const [category] = await db

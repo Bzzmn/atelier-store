@@ -19,6 +19,7 @@ pnpm dev            # dev server on :3000
 pnpm build          # production build
 pnpm lint           # eslint
 pnpm typecheck      # tsc --noEmit
+pnpm test           # vitest run (unit tests: src/**/*.test.ts)
 
 pnpm db:generate    # drizzle-kit: create SQL migration from schema changes → ./drizzle
 pnpm db:migrate     # apply migrations to DATABASE_URL
@@ -31,7 +32,7 @@ pnpm auth:create-admin  # create an admin user (--email, --name; prompts for the
 scripts/auth-smoke.sh   # curl smoke test of the auth flows against a running dev server
 ```
 
-No test runner is configured yet.
+Vitest (`vitest.config.mts`, node environment, `@/` alias) covers pure logic only; there are no component or e2e tests yet.
 
 Env vars live in `.env.local` or `.env` (template: `.env.example`): `DATABASE_URL` (Neon pooled URL), `BETTER_AUTH_SECRET` (32+ chars, `openssl rand -base64 32`; without it Better Auth signs cookies with a public default and production throws), `BETTER_AUTH_URL`. Next loads both natively; `drizzle.config.ts` (dotenv) and `db:seed` (`--env-file-if-exists`) load both too, with `.env.local` taking precedence.
 
@@ -70,6 +71,7 @@ Visual rules: the UI is monochrome (imagery supplies the color) and light-only. 
 - Loading states are page skeletons built from `Skeleton` (`src/components/skeleton.tsx`): `src/app/shop/loading.tsx` (every `/shop` listing) and `src/app/collections/loading.tsx` (collection pages) both render `ProductListingSkeleton`, and `src/app/products/[slug]/loading.tsx` covers the product page. When a page's layout changes, update its skeleton to match so the content doesn't jump when it loads.
 - The product detail page is `src/app/products/[slug]/page.tsx`, statically generated from `getProductSlugs()`. Stock states come from `getStockState()` in `src/lib/stock.ts`: 0 is out of stock, 3 or fewer is low stock. Use that function rather than comparing `stock` inline.
 - Gallery images beyond the first are `detail()` crops: 3:4 focal-point zooms of the primary Unsplash photo. Check crops visually; zooms can expose brand labels.
+- **Shopping bag** — `/bag` (`src/app/bag/`, dynamic, `noindex`). The bag is a `bag` cookie of `[slug, quantity]` pairs (`src/lib/bag-cookie.ts`: parse/serialize, max 50 lines, quantity 1–99). It never stores prices or stock, and it isn't `httpOnly` so the static header can show the count (`useBagCount`, `src/components/bag/use-bag-count.ts`). Only `/bag` and the server actions in `src/app/bag/actions.ts` (`addToBag`, `updateBagQuantity`; quantity 0 removes) read the cookie, through `src/lib/bag.ts` (`server-only`), so catalog pages stay static. Actions check fresh stock with `getStockBySlugs()` (uncached; ISR pages can be a minute stale), apply the pure rules in `src/lib/bag-reconcile.ts` (`applyAdd`, `applyUpdate`, `normalizeBag`, `reconcile`), write the whole bag back normalized, and the client calls `notifyBagChange()` so the header updates. The page prices lines from current rows and clamps to stock at render. RSCs can't write cookies, so the cookie is corrected on the next action. Sold-out lines stay visible but don't count toward the subtotal. Guest-only for now: no account sync and no stock reservation.
 - next/image in Next 16: use `preload` for above-the-fold images (`priority` is deprecated). The default `qualities` is `[75]`.
 
 ## pnpm build scripts
