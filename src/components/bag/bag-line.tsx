@@ -42,6 +42,16 @@ export function BagLine({ line }: { line: ReconciledLine<ProductSummary> }) {
             Only {product.stock} available. Quantity reduced from {requested} to {quantity}.
           </p>
         )}
+        {/* Says why "+" is disabled; the adjusted notice above already covers it. */}
+        {!soldOut && !adjusted && quantity >= max && (
+          <p className="type-body-sm mt-2 text-fg-muted">
+            {max < product.stock
+              ? `Limit of ${max} per piece.`
+              : max === 1
+                ? "The last piece available is in your bag."
+                : `All ${max} available are in your bag.`}
+          </p>
+        )}
         {soldOut && (
           <p className="type-body-sm mt-2 text-fg-muted">
             This piece has sold out and isn&apos;t included in your subtotal.

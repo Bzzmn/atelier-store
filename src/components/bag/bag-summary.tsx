@@ -2,7 +2,17 @@ import Link from "next/link";
 
 import { formatPrice } from "@/lib/format";
 
-export function BagSummary({ subtotal, count }: { subtotal: number; count: number }) {
+const items = (count: number) => `${count} ${count === 1 ? "item" : "items"}`;
+
+type BagSummaryProps = {
+  subtotal: number;
+  /** Units included in the subtotal. */
+  count: number;
+  /** Sold-out units still in the bag, left out of the subtotal. */
+  soldOutCount: number;
+};
+
+export function BagSummary({ subtotal, count, soldOutCount }: BagSummaryProps) {
   return (
     <section aria-labelledby="bag-summary-title" className="bg-bg-muted p-6 md:p-8">
       <h2 id="bag-summary-title" className="type-label">
@@ -11,11 +21,15 @@ export function BagSummary({ subtotal, count }: { subtotal: number; count: numbe
       <dl className="type-body mt-6 grid grid-cols-[1fr_auto] gap-x-6 gap-y-3">
         <dt>
           Subtotal{" "}
-          <span className="text-fg-muted">
-            ({count} {count === 1 ? "item" : "items"})
-          </span>
+          <span className="text-fg-muted">({items(count)})</span>
         </dt>
         <dd className="text-right font-medium tabular-nums">{formatPrice(subtotal)}</dd>
+        {soldOutCount > 0 && (
+          <>
+            <dt className="text-fg-muted">Sold out ({items(soldOutCount)})</dt>
+            <dd className="text-right text-fg-muted">Not included</dd>
+          </>
+        )}
         <dt className="text-fg-muted">Shipping</dt>
         <dd className="text-right text-fg-muted">Complimentary</dd>
       </dl>

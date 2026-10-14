@@ -4,6 +4,7 @@ import { type MouseEvent, useActionState, useEffect, useRef } from "react";
 
 import { updateBagQuantity } from "@/app/bag/actions";
 import { initialBagState } from "@/app/bag/state";
+import { announceBag } from "@/components/bag/bag-announcer";
 import { notifyBagChange } from "@/components/bag/use-bag-count";
 import { MinusIcon, PlusIcon } from "@/components/icons";
 
@@ -27,13 +28,15 @@ export function BagLineControls({ slug, name, quantity, max, soldOut }: BagLineC
     if (state.id > 0) notifyBagChange();
   }, [state.id]);
 
-  // A removed line unmounts with the focused button; send focus to the page heading
-  // rather than letting it fall back to <body>.
+  // A removed line unmounts with the focused button and its status message: send focus to
+  // the page heading rather than <body>, and announce the removal from the page instead.
   useEffect(
     () => () => {
-      if (removing.current) document.getElementById("bag-title")?.focus();
+      if (!removing.current) return;
+      document.getElementById("bag-title")?.focus();
+      announceBag(`${name} removed from your bag.`);
     },
-    [],
+    [name],
   );
 
   // aria-disabled rather than disabled, so focus stays put when a bound is reached.
@@ -60,7 +63,8 @@ export function BagLineControls({ slug, name, quantity, max, soldOut }: BagLineC
             >
               <MinusIcon width={16} height={16} />
             </button>
-            <output aria-live="polite" className="type-caption w-8 text-center tabular-nums">
+            {/* Not a live region: the status message below already announces the new quantity. */}
+            <output className="type-caption w-8 text-center tabular-nums">
               {quantity}
             </output>
             <button
