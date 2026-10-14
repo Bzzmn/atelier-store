@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { AddToBagForm } from "@/components/bag/add-to-bag-form";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { Disclosure } from "@/components/product/disclosure";
 import { StockStatus } from "@/components/product/stock-status";
@@ -38,14 +39,17 @@ export function ProductInfo({ product }: { product: Product }) {
       </dl>
 
       <div className="mt-8 flex flex-col gap-3">
-        {/* Cart isn't built yet: the button renders its final state only. */}
-        <button type="button" disabled={soldOut} className="btn btn-primary w-full">
-          {soldOut ? "Sold Out" : "Add to Shopping Bag"}
-        </button>
-        {soldOut && (
-          <p className="type-body-sm text-center text-fg-muted">
-            This piece is currently unavailable. Contact Client Services for alternatives.
-          </p>
+        {soldOut ? (
+          <>
+            <button type="button" disabled className="btn btn-primary w-full">
+              Sold Out
+            </button>
+            <p className="type-body-sm text-center text-fg-muted">
+              This piece is currently unavailable. Contact Client Services for alternatives.
+            </p>
+          </>
+        ) : (
+          <AddToBagForm slug={product.slug} />
         )}
       </div>
 
