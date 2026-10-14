@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { BagAnnouncer } from "@/components/bag/bag-announcer";
 import { BagLine } from "@/components/bag/bag-line";
 import { BagSummary } from "@/components/bag/bag-summary";
+import { BagSync } from "@/components/bag/bag-sync";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { getBag } from "@/lib/bag";
 
@@ -14,9 +16,14 @@ export const metadata: Metadata = {
 
 export default async function BagPage() {
   const { lines, removedCount, subtotal, count } = await getBag();
+  // Units kept in the bag (and the header count) but left out of the subtotal.
+  const soldOutCount = lines.reduce((total, line) => total + (line.soldOut ? line.requested : 0), 0);
+  const corrected = removedCount > 0 || lines.some((line) => line.adjusted);
 
   return (
     <main className="flex-1 pt-header pb-section">
+      {corrected && <BagSync />}
+      <BagAnnouncer />
       <div className="page-container pt-10 md:pt-14">
         <Breadcrumbs items={[{ label: "Shopping Bag" }]} />
         <h1 id="bag-title" tabIndex={-1} className="type-headline mt-8 outline-none">
@@ -47,7 +54,7 @@ export default async function BagPage() {
             </ul>
             <div className="lg:col-span-5 xl:col-span-4">
               <div className="lg:sticky lg:top-[calc(var(--header-height)+2.5rem)]">
-                <BagSummary subtotal={subtotal} count={count} />
+                <BagSummary subtotal={subtotal} count={count} soldOutCount={soldOutCount} />
               </div>
             </div>
           </div>

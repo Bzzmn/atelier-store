@@ -11,6 +11,7 @@ import type { BagActionState } from "./state";
 // the database on every call: product pages are ISR and may show stock up to a minute old.
 
 const INVALID = "Something went wrong. Please try again.";
+const FAILED = "We couldn't update your bag. Please try again.";
 
 function parseQuantity(value: FormDataEntryValue | null, fallback?: number) {
   if (value === null && fallback !== undefined) return fallback;
@@ -20,13 +21,21 @@ function parseQuantity(value: FormDataEntryValue | null, fallback?: number) {
   return Number.isInteger(quantity) && Math.abs(quantity) <= 1000 ? quantity : undefined;
 }
 
+/** The change made, or undefined if the stock lookup failed (the bag is left as it was). */
 async function mutateBag(
   slug: string,
   apply: typeof applyAdd,
   quantity: number,
-): Promise<BagChange> {
+): Promise<BagChange | undefined> {
   const lines = await readBag();
-  const stock = await getStockBySlugs([...new Set([...lines.map((line) => line.slug), slug])]);
+  let stock;
+  try {
+    stock = await getStockBySlugs([...new Set([...lines.map((line) => line.slug), slug])]);
+  } catch (error) {
+    // Report it on the line instead of replacing the page with an error screen.
+    console.error("Bag stock lookup failed", error);
+    return undefined;
+  }
   const result = apply(lines, slug, quantity, stock);
   // Write back the whole bag normalized, which also fixes lines the page showed as adjusted.
   await writeBag(normalizeBag(result.lines, stock));
@@ -43,6 +52,7 @@ export async function addToBag(prev: BagActionState, formData: FormData): Promis
   if (!isSlug(slug) || quantity === undefined || quantity < 1) return respond(prev, "error", INVALID);
 
   const change = await mutateBag(slug, applyAdd, quantity);
+  if (!change) return respond(prev, "error", FAILED);
   switch (change.status) {
     case "added":
       return respond(prev, "success", "Added to your bag.");
@@ -75,6 +85,7 @@ export async function updateBagQuantity(
   if (!isSlug(slug) || quantity === undefined) return respond(prev, "error", INVALID);
 
   const change = await mutateBag(slug, applyUpdate, quantity);
+  if (!change) return respond(prev, "error", FAILED);
   switch (change.status) {
     case "updated":
       return respond(prev, "success", `Quantity updated to ${change.quantity}.`);
