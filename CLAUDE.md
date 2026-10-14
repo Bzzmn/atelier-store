@@ -46,6 +46,7 @@ Env vars live in `.env.local` or `.env` (template: `.env.example`): `DATABASE_UR
 - **Proxy** — `src/proxy.ts` matches `/account/*` and `/admin/*` and only redirects when there's no session cookie (`getSessionCookie`). It does not validate the cookie and isn't a security boundary.
 - **Keep catalog pages static** — don't read the session (or `headers()`/cookies) in the root layout, `SiteHeader` or catalog pages; that would make every ISR page dynamic. RSCs can't write cookies, so protected pages render `SessionKeepAlive`, which calls `/api/auth/get-session` to slide the session expiry.
 - **Auth routes** — `/sign-in` and `/sign-up` (`src/app/(auth)/`, `?next=` return path), `/account` (customer) and `/admin` (admin placeholder). All are dynamic and `noindex`.
+- **Account area** — `src/app/account/layout.tsx` renders the shared shell (`AccountBreadcrumbs`, `AccountNav` and `SessionKeepAlive`) and doesn't read the session. Sections are `/account` (overview) and `/account/details` (`ProfileForm` updates the name and `PasswordForm` changes the password and revokes other sessions, both through `authClient`). To add a section, add it to `ACCOUNT_LINKS` in `src/components/account/account-nav.tsx`. There's no `loading.tsx`, because a Suspense boundary would turn `requireSession`'s 307 into a streamed redirect.
 
 ## Design system
 
