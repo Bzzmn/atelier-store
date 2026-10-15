@@ -19,6 +19,20 @@ export async function requireSession(returnTo: string) {
   return session;
 }
 
+/**
+ * Like requireSession, but checked against the database instead of the 5-minute cookie
+ * cache, so a revoked session (e.g. after a password change) is refused at once. For pages
+ * that show personal data such as order addresses.
+ */
+export const requireFreshSession = cache(async (returnTo: string) => {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+    query: { disableCookieCache: true },
+  });
+  if (!session) redirect(`/sign-in?next=${encodeURIComponent(returnTo)}`);
+  return session;
+});
+
 export const requireAdmin = cache(async () => {
   // Bypass the cookie cache so a role change applies on the next request.
   const session = await auth.api.getSession({

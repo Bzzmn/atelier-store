@@ -14,7 +14,19 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function BagPage() {
+// Set by checkout when it sends the customer back here. Changes they must review are
+// errors; a canceled checkout is just a note.
+const NOTICES = {
+  changed: { text: "Your bag changed since you last saw it. Please review it before checking out.", error: true },
+  stock: { text: "Some pieces sold out while you were checking out. Your bag has been updated.", error: true },
+  canceled: { text: "Checkout canceled. You haven't been charged, and your bag is as you left it.", error: false },
+};
+
+export default async function BagPage({ searchParams }: PageProps<"/bag">) {
+  const { notice: key } = await searchParams;
+  const notice = typeof key === "string" && Object.hasOwn(NOTICES, key)
+    ? NOTICES[key as keyof typeof NOTICES]
+    : undefined;
   const { lines, removedCount, subtotal, count } = await getBag();
   // Units kept in the bag (and the header count) but left out of the subtotal.
   const soldOutCount = lines.reduce((total, line) => total + (line.soldOut ? line.requested : 0), 0);
@@ -29,6 +41,12 @@ export default async function BagPage() {
         <h1 id="bag-title" tabIndex={-1} className="type-headline mt-8 outline-none">
           Shopping Bag
         </h1>
+
+        {notice && (
+          <p role="status" className={`type-body-sm mt-6 ${notice.error ? "text-error" : "text-fg-muted"}`}>
+            {notice.text}
+          </p>
+        )}
 
         {removedCount > 0 && (
           <p role="status" className="type-body-sm mt-6 text-error">

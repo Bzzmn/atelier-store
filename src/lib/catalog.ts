@@ -114,6 +114,29 @@ export async function getStockBySlugs(slugs: string[]) {
   return new Map(rows.map((row) => [row.slug, row.stock]));
 }
 
+export type CheckoutProduct = {
+  id: number;
+  slug: string;
+  name: string;
+  price: number; // minor units (cents)
+  stock: number;
+  image?: string; // primary shot, shown on Stripe's checkout page
+};
+
+/**
+ * What checkout charges for, straight from the database. Not `cache`d, for the same reason
+ * as getStockBySlugs: prices and stock must be as of this request, never an ISR copy.
+ */
+export async function getCheckoutProducts(slugs: string[]): Promise<CheckoutProduct[]> {
+  if (slugs.length === 0) return [];
+  const rows = await db.query.products.findMany({
+    where: inArray(products.slug, slugs),
+    columns: { id: true, slug: true, name: true, price: true, stock: true },
+    with: { images: { columns: { src: true }, where: eq(productImages.position, 0) } },
+  });
+  return rows.map(({ images, ...row }) => ({ ...row, image: images[0]?.src }));
+}
+
 export const getCategory = cache(async (slug: string) => {
   const [category] = await db
     .select({ id: categories.id, slug: categories.slug, name: categories.name })

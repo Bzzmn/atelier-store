@@ -17,7 +17,7 @@ export default async function AccountPage() {
     <>
       <h1 className="type-headline">{user.name ? `Hello, ${user.name}` : "My Account"}</h1>
       <p className="type-body mt-3 text-fg-muted">
-        Manage your personal details and sign-in settings.
+        Manage your orders, personal details and sign-in settings.
       </p>
 
       <section aria-labelledby="details-title" className="hairline-t mt-10 pt-8">

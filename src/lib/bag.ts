@@ -4,7 +4,8 @@ import { cookies } from "next/headers";
 
 import { BAG_COOKIE, type BagLine, parseBag, serializeBag } from "@/lib/bag-cookie";
 import { reconcile } from "@/lib/bag-reconcile";
-import { getProductsBySlugs, toSummary } from "@/lib/catalog";
+import { getProductsBySlugs, getStockBySlugs, toSummary } from "@/lib/catalog";
+import { CHECKOUT_COOKIE, getHeldStock, isOrderId } from "@/lib/orders";
 
 // Only /bag and the bag server actions read the cookie. Reading it anywhere in the root
 // layout, header or catalog pages would make every ISR page dynamic.
@@ -33,11 +34,47 @@ export async function writeBag(lines: BagLine[]) {
   });
 }
 
+/**
+ * Units the visitor's own unfinished checkout reserved (e.g. they went back from Stripe).
+ * They count as available to this visitor: checking out again releases them first.
+ */
+async function getOwnHeldStock() {
+  const orderId = (await cookies()).get(CHECKOUT_COOKIE)?.value;
+  if (!isOrderId(orderId)) return new Map<string, number>();
+  try {
+    return await getHeldStock(orderId);
+  } catch (error) {
+    console.error("Held stock lookup failed", error);
+    return new Map<string, number>();
+  }
+}
+
+/** Fresh stock per slug as this visitor can buy it, including their own held units. */
+export async function getAvailableStock(slugs: string[]) {
+  const [stock, held] = await Promise.all([getStockBySlugs(slugs), getOwnHeldStock()]);
+  for (const [slug, quantity] of held) {
+    const units = stock.get(slug);
+    if (units !== undefined) stock.set(slug, units + quantity);
+  }
+  return stock;
+}
+
 /** The bag priced from current catalog rows, with quantities clamped to stock. */
 export async function getBag() {
   const lines = await readBag();
-  const products = await getProductsBySlugs(lines.map((line) => line.slug));
-  return reconcile(lines, new Map(products.map((product) => [product.slug, toSummary(product)])));
+  const [products, held] = await Promise.all([
+    getProductsBySlugs(lines.map((line) => line.slug)),
+    getOwnHeldStock(),
+  ]);
+  return reconcile(
+    lines,
+    new Map(
+      products.map((product) => [
+        product.slug,
+        { ...toSummary(product), stock: product.stock + (held.get(product.slug) ?? 0) },
+      ]),
+    ),
+  );
 }
 
 export type BagView = Awaited<ReturnType<typeof getBag>>;
