@@ -8,6 +8,9 @@ const STATUSES: Partial<Record<Status, { label: string; dot: string }>> = {
   needs_review: { label: "Under review", dot: "border border-fg-subtle" },
   failed: { label: "Payment failed", dot: "bg-error" },
   pending: { label: "Awaiting payment", dot: "border border-fg-subtle" },
+  // Unfinished checkouts: only the admin order list shows these.
+  expired: { label: "Expired", dot: "border border-fg-subtle" },
+  canceled: { label: "Canceled", dot: "border border-fg-subtle" },
 };
 
 function orderStatusLabel(status: Status) {
