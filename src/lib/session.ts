@@ -33,13 +33,17 @@ export const requireFreshSession = cache(async (returnTo: string) => {
   return session;
 });
 
-export const requireAdmin = cache(async () => {
+/**
+ * Every admin page and admin server action calls this first (src/lib/admin/admin-guard.test.ts
+ * enforces it). `returnTo` is where sign-in sends the admin back to.
+ */
+export const requireAdmin = cache(async (returnTo = "/admin") => {
   // Bypass the cookie cache so a role change applies on the next request.
   const session = await auth.api.getSession({
     headers: await headers(),
     query: { disableCookieCache: true },
   });
-  if (!session) redirect("/sign-in?next=/admin");
+  if (!session) redirect(`/sign-in?next=${encodeURIComponent(returnTo)}`);
   // 404 rather than 403 so the admin area isn't advertised.
   if (session.user.role !== "admin") notFound();
   return session;

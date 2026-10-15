@@ -6,7 +6,7 @@ import { OrderStatus } from "@/components/orders/order-status";
 import { OrderSummary } from "@/components/orders/order-summary";
 import type { OrderStatus as Status } from "@/db/schema";
 import { orderNumber } from "@/lib/checkout-rules";
-import { formatDate } from "@/lib/format";
+import { addressLines, formatDate } from "@/lib/format";
 import { getCustomerOrder, isOrderId } from "@/lib/orders";
 import { requireFreshSession } from "@/lib/session";
 
@@ -32,16 +32,7 @@ export default async function AccountOrderPage({ params }: PageProps<"/account/o
   const order = isOrderId(id) ? await getCustomerOrder(user.id, id) : undefined;
   if (!order) notFound();
 
-  const address = order.shippingAddress;
-  const addressLines = address
-    ? [
-        address.name,
-        address.line1,
-        address.line2,
-        [address.city, address.state, address.postalCode].filter(Boolean).join(", "),
-        address.country,
-      ].filter(Boolean)
-    : [];
+  const address = addressLines(order.shippingAddress);
 
   return (
     <>
@@ -76,18 +67,18 @@ export default async function AccountOrderPage({ params }: PageProps<"/account/o
         <OrderSummary items={order.items} total={order.total} />
       </div>
 
-      {(addressLines.length > 0 || order.email) && (
+      {(address.length > 0 || order.email) && (
         <section aria-labelledby="delivery-title" className="hairline-t mt-10 pt-8">
           <h2 id="delivery-title" className="type-label">
             Delivery
           </h2>
           <dl className="type-body mt-6 grid gap-6 sm:grid-cols-2">
-            {addressLines.length > 0 && (
+            {address.length > 0 && (
               <div>
                 <dt className="type-micro text-fg-muted">Shipping address</dt>
                 <dd className="mt-2">
                   <address className="not-italic">
-                    {addressLines.map((line, index) => (
+                    {address.map((line, index) => (
                       <span key={index} className="block">
                         {line}
                       </span>

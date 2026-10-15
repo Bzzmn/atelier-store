@@ -1,3 +1,5 @@
+import type { ShippingAddress } from "@/db/schema/orders";
+
 const priceFormatter = new Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "USD",
@@ -23,4 +25,16 @@ export function slugify(value: string) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
+}
+
+/** A shipping address as display lines, skipping empty parts. */
+export function addressLines(address: ShippingAddress | null) {
+  if (!address) return [];
+  return [
+    address.name,
+    address.line1,
+    address.line2,
+    [address.city, address.state, address.postalCode].filter(Boolean).join(", "),
+    address.country,
+  ].filter((line): line is string => Boolean(line));
 }

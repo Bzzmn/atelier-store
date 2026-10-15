@@ -3,7 +3,14 @@ import "server-only";
 import { and, asc, desc, eq, inArray, isNull, lt, sql } from "drizzle-orm";
 
 import { db } from "@/db";
-import { orderItems, orders, productImages, type ShippingAddress, stripeEvents } from "@/db/schema";
+import {
+  orderItems,
+  orders,
+  type OrderStatus,
+  productImages,
+  type ShippingAddress,
+  stripeEvents,
+} from "@/db/schema";
 import {
   CHECKOUT_TTL_MS,
   completedSessionAction,
@@ -163,6 +170,50 @@ export async function getCustomerOrder(userId: string, orderId: string) {
     ...order,
     items: order.items.map(({ product, ...item }) => ({ ...item, image: product.images[0] })),
   };
+}
+
+export const ADMIN_ORDERS_PAGE_SIZE = 50;
+/** Deepest page the admin list serves; keeps OFFSET small. */
+export const MAX_ADMIN_ORDERS_PAGE = 1000;
+
+/**
+ * Every order for the admin list, newest first, optionally of one status. Returns one page of
+ * ADMIN_ORDERS_PAGE_SIZE and the total match count. Callers check requireAdmin() first.
+ */
+export async function getAdminOrders({
+  status,
+  page = 1,
+  limit = ADMIN_ORDERS_PAGE_SIZE,
+}: { status?: OrderStatus; page?: number; limit?: number } = {}) {
+  const rows = await db.query.orders.findMany({
+    where: status ? eq(orders.status, status) : undefined,
+    columns: { id: true, status: true, email: true, total: true, createdAt: true },
+    with: { items: { columns: { quantity: true } } },
+    extras: { matches: sql<string>`count(*) over ()`.as("matches") },
+    orderBy: [desc(orders.createdAt), desc(orders.id)],
+    limit,
+    offset: (Math.min(page, MAX_ADMIN_ORDERS_PAGE) - 1) * limit,
+  });
+  return {
+    orders: rows.map((row) => ({
+      id: row.id,
+      status: row.status,
+      email: row.email,
+      total: row.total,
+      createdAt: row.createdAt,
+      pieces: row.items.reduce((total, item) => total + item.quantity, 0),
+    })),
+    total: Number(rows[0]?.matches ?? 0),
+  };
+}
+
+/** Any order with all its fields and items, for the admin detail page. Callers check requireAdmin() first. */
+export async function getAdminOrder(orderId: string) {
+  if (!isOrderId(orderId)) return undefined;
+  return db.query.orders.findFirst({
+    where: eq(orders.id, orderId),
+    with: { items: itemsInOrder },
+  });
 }
 
 /** The order a Checkout Session belongs to, as the webhook last left it. Read-only. */
