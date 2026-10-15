@@ -5,15 +5,25 @@ import { usePathname } from "next/navigation";
 
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { Breadcrumbs } from "@/components/breadcrumbs";
+import { orderNumber } from "@/lib/checkout-rules";
 
 const ACCOUNT_LINKS = [
   { href: "/account", label: "Overview" },
+  { href: "/account/orders", label: "Orders" },
   { href: "/account/details", label: "Account details" },
 ] as const;
+
+/** The section a path belongs to: its own link, or the parent of a nested page (an order). */
+function currentSection(pathname: string) {
+  return ACCOUNT_LINKS.find(
+    (link) => pathname === link.href || (link.href !== "/account" && pathname.startsWith(`${link.href}/`)),
+  );
+}
 
 // Section links for the account area: a scrolling tab row on mobile, a sidebar from md.
 export function AccountNav() {
   const pathname = usePathname();
+  const section = currentSection(pathname);
 
   return (
     <nav aria-label="Account sections" className="hairline-b md:border-b-0">
@@ -22,8 +32,9 @@ export function AccountNav() {
           <li key={link.href} className="shrink-0">
             <Link
               href={link.href}
-              aria-current={pathname === link.href ? "page" : undefined}
-              className="type-label link-quiet block py-3 text-fg-muted aria-[current=page]:text-fg md:py-0"
+              // "page" on the section itself, "true" on its nested pages (e.g. an order).
+              aria-current={pathname === link.href ? "page" : section === link ? "true" : undefined}
+              className="type-label link-quiet block py-3 text-fg-muted aria-[current=page]:text-fg aria-[current=true]:text-fg md:py-0"
             >
               {link.label}
             </Link>
@@ -37,17 +48,20 @@ export function AccountNav() {
   );
 }
 
-// "Home / My Account / <section>", from the same links as the nav.
+// "Home / My Account / <section> / <order>", from the same links as the nav.
 export function AccountBreadcrumbs() {
   const pathname = usePathname();
-  const section = ACCOUNT_LINKS.find((link) => link.href === pathname && link.href !== "/account");
+  const section = currentSection(pathname);
+  if (!section || section.href === "/account") return <Breadcrumbs items={[{ label: "My Account" }]} />;
 
+  const account = { label: "My Account", href: "/account" };
+  const orderId = pathname.startsWith("/account/orders/") ? pathname.split("/")[3] : undefined;
   return (
     <Breadcrumbs
       items={
-        section
-          ? [{ label: "My Account", href: "/account" }, { label: section.label }]
-          : [{ label: "My Account" }]
+        orderId
+          ? [account, { label: section.label, href: section.href }, { label: `Order ${orderNumber(orderId)}` }]
+          : [account, { label: section.label }]
       }
     />
   );

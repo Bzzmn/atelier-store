@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { CheckoutForm } from "@/components/bag/checkout-form";
 import { formatPrice } from "@/lib/format";
 
 const items = (count: number) => `${count} ${count === 1 ? "item" : "items"}`;
@@ -23,7 +24,7 @@ export function BagSummary({ subtotal, count, soldOutCount }: BagSummaryProps) {
           Subtotal{" "}
           <span className="text-fg-muted">({items(count)})</span>
         </dt>
-        <dd className="text-right font-medium tabular-nums">{formatPrice(subtotal)}</dd>
+        <dd className="text-right tabular-nums">{formatPrice(subtotal)}</dd>
         {soldOutCount > 0 && (
           <>
             <dt className="text-fg-muted">Sold out ({items(soldOutCount)})</dt>
@@ -32,14 +33,17 @@ export function BagSummary({ subtotal, count, soldOutCount }: BagSummaryProps) {
         )}
         <dt className="text-fg-muted">Shipping</dt>
         <dd className="text-right text-fg-muted">Complimentary</dd>
+        {/* Shipping is free and no tax is collected, so the total is what Stripe charges. */}
+        <div className="hairline-t col-span-2 mt-1 grid grid-cols-subgrid pt-4 font-medium">
+          <dt>Total</dt>
+          <dd className="text-right tabular-nums">{formatPrice(subtotal)}</dd>
+        </div>
       </dl>
       <p className="type-body-sm mt-4 text-fg-muted">
-        Prices reflect current availability. Taxes are calculated at checkout.
+        Prices reflect current availability. You&apos;ll enter shipping and payment details on our
+        secure checkout, powered by Stripe.
       </p>
-      {/* Checkout isn't built yet. */}
-      <button type="button" disabled className="btn btn-primary mt-6 w-full">
-        Checkout coming soon
-      </button>
+      <CheckoutForm subtotal={subtotal} count={count} />
       <div className="mt-4 text-center">
         <Link href="/shop/new" className="btn btn-ghost">
           Continue shopping

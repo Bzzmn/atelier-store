@@ -2,8 +2,7 @@
 
 import { isSlug, MAX_BAG_LINES } from "@/lib/bag-cookie";
 import { applyAdd, applyUpdate, type BagChange, normalizeBag } from "@/lib/bag-reconcile";
-import { readBag, writeBag } from "@/lib/bag";
-import { getStockBySlugs } from "@/lib/catalog";
+import { getAvailableStock, readBag, writeBag } from "@/lib/bag";
 
 import type { BagActionState } from "./state";
 
@@ -30,7 +29,7 @@ async function mutateBag(
   const lines = await readBag();
   let stock;
   try {
-    stock = await getStockBySlugs([...new Set([...lines.map((line) => line.slug), slug])]);
+    stock = await getAvailableStock([...new Set([...lines.map((line) => line.slug), slug])]);
   } catch (error) {
     // Report it on the line instead of replacing the page with an error screen.
     console.error("Bag stock lookup failed", error);
